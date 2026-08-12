@@ -1,0 +1,43 @@
+# ===== Python =====
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+*.sqlite3
+
+# ===== Node / Frontend (React, Vue, Angular) =====
+node_modules/
+dist/
+build/
+.npm/
+.next/
+.vite/
+
+# ===== Variables de entorno y secretos =====
+.env
+.env.*
+*.local
+
+# ===== Docker =====
+*.log
+docker-compose.override.yml
+
+# ===== IDE / Editor =====
+.vscode/
+.idea/
+*.swp
+
+# ===== Sistema operativo =====
+.DS_Store
+Thumbs.db
+
+# ===== OpenSpec / SDD =====
+.opsx/tmp/
+
+# ===== Testing / Coverage =====
+coverage/
+.coverage
+htmlcov/
+.pytest_cache/

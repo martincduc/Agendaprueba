@@ -113,3 +113,65 @@ def test_error_de_persistencia_devuelve_respuesta_controlada(client, monkeypatch
 
     assert response.status_code == 500
     assert response.json() == {"detail": "No se pudo registrar la persona"}
+
+
+def test_listado_vacio_devuelve_200_y_lista_vacia(client):
+    response = client.get("/api/personas")
+
+    assert response.status_code == 200
+    assert response.json() == []
+
+
+def test_listado_devuelve_todas_las_personas_con_campos_basicos(client):
+    client.post("/api/personas", json={"nombre": "Ana", "apellidos": "García"})
+    client.post("/api/personas", json={"nombre": "Luis", "apellidos": "Pérez"})
+
+    response = client.get("/api/personas")
+
+    assert response.status_code == 200
+    assert response.json() == [
+        {"id": 1, "nombre": "Ana", "apellidos": "García"},
+        {"id": 2, "nombre": "Luis", "apellidos": "Pérez"},
+    ]
+
+
+def test_listado_se_ordena_por_apellidos_y_nombre(client):
+    for nombre, apellidos in [("Zoe", "Alonso"), ("Ana", "López"), ("Luis", "Alonso")]:
+        client.post(
+            "/api/personas", json={"nombre": nombre, "apellidos": apellidos}
+        )
+
+    response = client.get("/api/personas")
+
+    assert [(item["apellidos"], item["nombre"]) for item in response.json()] == [
+        ("Alonso", "Luis"),
+        ("Alonso", "Zoe"),
+        ("López", "Ana"),
+    ]
+
+
+def test_listado_se_actualiza_despues_de_registrar(client):
+    client.post("/api/personas", json={"nombre": "Ana", "apellidos": "García"})
+
+    response = client.get("/api/personas")
+
+    assert response.json() == [{"id": 1, "nombre": "Ana", "apellidos": "García"}]
+
+
+def test_error_de_consulta_devuelve_respuesta_controlada(client, monkeypatch):
+    def fail_list(*args, **kwargs):
+        raise database.PersistenceError
+
+    monkeypatch.setattr(database, "list_personas", fail_list)
+    response = client.get("/api/personas")
+
+    assert response.status_code == 500
+    assert response.json() == {"detail": "No se pudo cargar el listado de personas"}
+
+
+def test_interfaz_muestra_listado_vacio_y_actualiza_despues_del_alta():
+    html = (Path(__file__).parents[1] / "app" / "static" / "index.html").read_text()
+
+    assert 'fetch("/api/personas")' in html
+    assert "La agenda no contiene personas." in html
+    assert "await loadPersonas()" in html

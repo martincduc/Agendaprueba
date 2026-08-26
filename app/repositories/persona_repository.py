@@ -30,3 +30,6 @@ class PersonaRepository:
             categoria,
             comentarios,
         )
+
+    def list(self) -> list[dict]:
+        return database.list_personas(self.database_path)

@@ -4,7 +4,7 @@ from fastapi import FastAPI, HTTPException, status
 from fastapi.responses import FileResponse
 
 from app.database import DEFAULT_DATABASE_PATH, PersistenceError, initialize_database
-from app.schemas.persona import PersonaCreate, PersonaResponse
+from app.schemas.persona import PersonaCreate, PersonaResponse, PersonaSummary
 from app.services.persona_service import PersonaService
 
 
@@ -25,6 +25,19 @@ def create_app(database_path: str | Path = DEFAULT_DATABASE_PATH) -> FastAPI:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="No se pudo registrar la persona",
+            ) from error
+
+    @application.get(
+        "/api/personas",
+        response_model=list[PersonaSummary],
+    )
+    def list_personas() -> list[dict]:
+        try:
+            return service.list()
+        except PersistenceError as error:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="No se pudo cargar el listado de personas",
             ) from error
 
     @application.get("/", include_in_schema=False)

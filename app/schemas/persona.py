@@ -76,3 +76,9 @@ class PersonaResponse(BaseModel):
     direccion: str | None = None
     categoria: str | None = None
     comentarios: str | None = None
+
+
+class PersonaSummary(BaseModel):
+    id: int
+    nombre: str
+    apellidos: str

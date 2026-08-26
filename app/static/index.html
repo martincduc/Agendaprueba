@@ -27,10 +27,55 @@
       <button type="submit">Guardar persona</button>
     </form>
     <p id="message" role="status"></p>
+    <section aria-labelledby="personas-heading">
+      <h2 id="personas-heading">Personas registradas</h2>
+      <p id="list-message" role="status"></p>
+      <table id="personas-table" hidden>
+        <thead>
+          <tr><th>ID</th><th>Nombre</th><th>Apellidos</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </section>
   </main>
   <script>
     const form = document.querySelector("#persona-form");
     const message = document.querySelector("#message");
+    const listMessage = document.querySelector("#list-message");
+    const table = document.querySelector("#personas-table");
+    const tableBody = table.querySelector("tbody");
+
+    async function loadPersonas() {
+      try {
+        const response = await fetch("/api/personas");
+        if (!response.ok) {
+          listMessage.textContent = "No se pudo cargar el listado de personas.";
+          table.hidden = true;
+          return;
+        }
+        const personas = await response.json();
+        tableBody.replaceChildren();
+        if (personas.length === 0) {
+          listMessage.textContent = "La agenda no contiene personas.";
+          table.hidden = true;
+          return;
+        }
+        listMessage.textContent = "";
+        for (const persona of personas) {
+          const row = document.createElement("tr");
+          for (const value of [persona.id, persona.nombre, persona.apellidos]) {
+            const cell = document.createElement("td");
+            cell.textContent = value;
+            row.appendChild(cell);
+          }
+          tableBody.appendChild(row);
+        }
+        table.hidden = false;
+      } catch (error) {
+        listMessage.textContent = "No se pudo cargar el listado de personas.";
+        table.hidden = true;
+      }
+    }
 
     form.addEventListener("submit", async (event) => {
       event.preventDefault();
@@ -52,10 +97,13 @@
         const persona = await response.json();
         message.textContent = `Persona registrada con ID ${persona.id}.`;
         form.reset();
+        await loadPersonas();
       } catch (error) {
         message.textContent = "No se pudo conectar con la agenda.";
       }
     });
+
+    loadPersonas();
   </script>
 </body>
 </html>

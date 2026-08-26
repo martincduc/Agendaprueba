@@ -76,3 +76,21 @@ def insert_persona(
             }
     except sqlite3.Error as error:
         raise PersistenceError from error
+
+
+def list_personas(database_path: str | Path) -> list[dict]:
+    try:
+        with sqlite3.connect(database_path) as connection:
+            rows = connection.execute(
+                """
+                SELECT id, nombre, apellidos
+                FROM personas
+                ORDER BY apellidos ASC, nombre ASC
+                """
+            ).fetchall()
+        return [
+            {"id": persona_id, "nombre": nombre, "apellidos": apellidos}
+            for persona_id, nombre, apellidos in rows
+        ]
+    except sqlite3.Error as error:
+        raise PersistenceError from error

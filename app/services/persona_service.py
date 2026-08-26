@@ -10,3 +10,6 @@ class PersonaService:
 
     def create(self, persona: PersonaCreate) -> dict:
         return self.repository.create(**persona.model_dump())
+
+    def list(self) -> list[dict]:
+        return self.repository.list()

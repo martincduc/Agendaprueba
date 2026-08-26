@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>AGENDA</title>
+</head>
+<body>
+  <main>
+    <h1>Registrar persona</h1>
+    <form id="persona-form">
+      <label>Nombre <input name="nombre" required></label>
+      <label>Apellidos <input name="apellidos" required></label>
+      <label>Fecha de nacimiento <input name="fecha_de_nacimiento" type="date"></label>
+      <label>Correo electrónico <input name="correo_electronico" type="email"></label>
+      <label>Teléfono <input name="telefono"></label>
+      <label>Dirección <input name="direccion"></label>
+      <label>Categoría
+        <select name="categoria">
+          <option value="">Selecciona una categoría</option>
+          <option>Familia</option>
+          <option>Trabajo</option>
+          <option>Amigos</option>
+          <option>Otro</option>
+        </select>
+      </label>
+      <label>Comentarios <textarea name="comentarios" maxlength="500"></textarea></label>
+      <button type="submit">Guardar persona</button>
+    </form>
+    <p id="message" role="status"></p>
+  </main>
+  <script>
+    const form = document.querySelector("#persona-form");
+    const message = document.querySelector("#message");
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const data = Object.fromEntries(new FormData(form));
+      for (const key of Object.keys(data)) {
+        if (data[key] === "") delete data[key];
+      }
+      try {
+        const response = await fetch("/api/personas", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data)
+        });
+        if (!response.ok) {
+          const error = await response.json();
+          message.textContent = error.detail || "No se pudo registrar la persona.";
+          return;
+        }
+        const persona = await response.json();
+        message.textContent = `Persona registrada con ID ${persona.id}.`;
+        form.reset();
+      } catch (error) {
+        message.textContent = "No se pudo conectar con la agenda.";
+      }
+    });
+  </script>
+</body>
+</html>

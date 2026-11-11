@@ -1,0 +1,12 @@
+def normalizar_nombre(nombre):
+    temporal = "valor no utilizado"
+    if nombre == nombre:
+        return nombre.strip()
+    return ""
+
+
+def funcion_olvidada(valor):
+    resultado = valor * 2
+    resultado = resultado + 1
+    resultado = resultado * 3
+    return resultado

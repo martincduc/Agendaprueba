@@ -1,0 +1,67 @@
+name: Laboratorio P13 SonarQube
+
+on:
+  workflow_dispatch:
+    inputs:
+      muestra:
+        description: Codigo que se analizara
+        required: true
+        type: choice
+        options: [defectuoso, corregido]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sonarqube-laboratorio
+  cancel-in-progress: false
+
+jobs:
+  laboratorio:
+    if: github.ref == 'refs/heads/main'
+    runs-on: [self-hosted, linux, sonarqube-agenda]
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Preparar muestra
+        shell: bash
+        env:
+          MUESTRA: ${{ inputs.muestra }}
+        run: |
+          case "$MUESTRA" in
+            defectuoso|corregido) ;;
+            *) exit 1 ;;
+          esac
+          mkdir -p .p13-lab/src .p13-lab/tests
+          cp "docs/p13/$MUESTRA.py.txt" .p13-lab/src/agenda_demo.py
+          cp docs/p13/test_demo.py.txt .p13-lab/tests/test_demo.py
+          python3.11 -m venv .p13-lab/venv
+          .p13-lab/venv/bin/python -m pip install pytest pytest-cov
+
+      - name: Prueba y cobertura de la muestra
+        shell: bash
+        working-directory: .p13-lab
+        run: |
+          PYTHONPATH=src venv/bin/python -m pytest -c /dev/null -q \
+            --cov=src --cov-config=/dev/null --cov-report=xml:coverage.xml
+
+      - name: Analizar muestra y comprobar gate
+        shell: bash
+        working-directory: .p13-lab
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_LAB_TOKEN }}
+          SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
+        run: |
+          sonar-scanner \
+            -Dsonar.projectKey=agenda-p13-lab \
+            -Dsonar.sources=src \
+            -Dsonar.tests=tests \
+            -Dsonar.python.version=3.11 \
+            -Dsonar.sourceEncoding=UTF-8 \
+            -Dsonar.python.coverage.reportPaths=coverage.xml \
+            -Dsonar.qualitygate.wait=true \
+            -Dsonar.qualitygate.timeout=300

@@ -1,0 +1,5 @@
+from agenda_demo import normalizar_nombre
+
+
+def test_normalizar_nombre():
+    assert normalizar_nombre("  Ana  ") == "Ana"
